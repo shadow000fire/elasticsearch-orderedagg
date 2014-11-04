@@ -1,0 +1,106 @@
+GET data/d/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "size": 10,
+  "fields": ["*"]
+}
+
+
+
+GET data/d/_search
+{
+  "sort": [
+    {
+      "symbol": {}, 
+      "date": {
+        "order": "asc"
+      }
+    }
+  ]
+}
+
+GET data/d/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "size": 0,
+  "aggs": {
+    "NAME-1": {
+      "terms": {
+        "field": "symbol",
+        "size": 100
+      }
+    }
+  },
+  "script_fields": {
+    "tr": {
+      "script": "doc['value'].value+1"
+    }
+  }
+}
+
+
+GET data/_status
+
+GET data/d/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "size": 0,
+  "aggs": {
+    "NAME-1": {
+      "terms": {
+        "field": "symbol",
+        "size": 100
+      },
+      "aggs": {
+        "NAME-2": {
+          "growth": {
+            "field":"value",
+            "order_field":"date",
+            "min": 10,
+            "max": 20
+          }
+        }
+      }
+    }
+  },
+  "fields": ["value","symbol"]
+}
+
+DELETE data
+PUT data
+{
+ "mappings": {
+    "d":{
+        "_routing":
+        {
+            "path":"symbol"
+        },
+        "properties": {
+            "symbol":{
+             "type": "string",
+             "index": "not_analyzed",
+             "store": "yes"
+            },
+            "date":{
+             "type": "date",
+             "format": "yyyy-MM-dd", 
+             "store": "yes"
+            },
+            "value":{
+             "type": "double",
+             "store": "yes"
+            }
+        }
+    }
+ },
+ "settings": {
+   "number_of_shards": 4
+ }
+}
+GET data/_mapping
